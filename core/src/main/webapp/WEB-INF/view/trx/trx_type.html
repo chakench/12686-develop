@@ -1,0 +1,429 @@
+<#--
+        * description: 事务类型界面
+        * version: 1.0
+        * author:he.chen@hand-china.com
+        * -->
+<#include "../include/header.html">
+<body>
+<script src="${base.contextPath}/common/code?trxStatus=TRX_STATUS" type="text/javascript"></script>
+<script src="${base.contextPath}/common/code?trxLevel=TRX_LEVEL" type="text/javascript"></script>
+
+<script>
+
+    var viewModel =kendo.observable({
+        model:{},
+        resetForm:function (e) {
+            var formData =viewModel.model.toJSON();
+            for(var k in formData){
+                viewModel.model.set(k,null);
+            }
+        },
+        query:function () {
+            $('#grid').data('kendoGrid').dataSource.page(1);
+        }
+    })
+    var userId='${Session.userId}';
+</script>
+<div id="content-container">
+    <div id="page-content">
+        <div class="panel" style="padding: 0px;border:none;box-shadow: none;">
+            <form class="form-horizontal" id="myForm">
+                <div class="panel-body">
+                    <div class="row" style="margin-bottom: 10px;">
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">事务类型标识</label>
+                                <div class="col-sm-8">
+                                    <input type="text" style="width: 160px"
+                                           data-bind="value:model.trxType" class="k-textbox">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">名称</label>
+                                <div class="col-sm-8">
+                                    <input type="text"  style="width: 100%"
+                                           data-bind="value:model.trxTypeName" class="k-textbox">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">状态</label>
+                                <div class="col-sm-8">
+                                    <input type="text" style="width: 100%" id="statusCode"
+                                           data-bind="value:model.statusCode" class="k-textbox">
+                                </div>
+                                <script>
+                                    $("#statusCode").kendoDropDownList({
+                                        dataSource: {
+                                            data: trxStatus
+                                        },
+                                        index: -1,
+                                        valuePrimitive: true,
+                                        dataTextField: "meaning",
+                                        dataValueField: "value"
+                                    });
+
+                                </script>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row ">
+                            <span class="btn btn-success" type="button" data-bind="click:query">
+                    <@spring.message "hap.query"/></span>
+                        <span class="btn btn-default" type="button" data-bind="click:resetForm">
+                    <@spring.message "hap.reset"/></span>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <div style="clear:both">
+            <div id="grid"  class="table"></div>
+        </div>
+    </div>
+    <script>kendo.bind($('#page-content'), viewModel);</script>
+</div>
+
+    <script>
+        var baseUrl="/trx/",
+        dataSource = new kendo.data.DataSource(
+            {
+                transport: {
+                    read: {
+                        url: baseUrl+'findAll',
+                        type: "POST",
+                        dataType: "json"
+                    },
+                    destroy: {
+                        url:baseUrl+"deleteTrxType",
+                        contentType: "application/json",
+                        type: "POST",
+                        dataType: "json"
+                    },
+                    create      : {
+                        url        : baseUrl+"addTrxType",
+                        contentType: "application/json",
+                        type       : "POST",
+                        dataType: "json"
+                    },
+                    update      : {
+                        url        : baseUrl+"updateTrxType",
+                        contentType: "application/json",
+                        type       : "POST",
+                        dataType: "json"
+                    },
+                    parameterMap: function (options, type) {
+                        if (type === "read") {
+                            return {
+                                trxType:viewModel.model.trxType,
+                                trxTypeName:viewModel.model.trxTypeName,
+                                statusCode:viewModel.model.statusCode,
+                                page:options.page,
+                                pageSize:options.pageSize}
+                        }else if(type !== "read" && options.models){
+//                            options.models.lastUpdatedBy=userId;
+//                            console.log(options.models);
+                            return kendo.stringify(options.models);
+                        }
+                    }
+                },
+                requestEnd: function(e) {
+                    if (e.response.rows != undefined) {
+
+                        if (e.response.success && e.type != "read" && e.response.rows[0] != 1 && e.response.rows[0] != 2) {
+                            kendo.ui.showInfoDialog({
+                                message: '成功'
+                            })
+                        } else if (e.response.rows[0] == 1) {
+                            kendo.ui.showInfoDialog({
+                                message: '事务类型标识或名称已经重复'
+                            }).done(function () {
+                                $(".k-pager-refresh").trigger("click");   //刷新表格右下角的刷新按钮
+                            })
+                        } else if (e.response.rows[0] == 2) {
+                            kendo.ui.showInfoDialog({
+                                message: '不同版本的同种事务类型只允许一个有效值！'
+                            }).done(function () {
+                                $(".k-pager-refresh").trigger("click");
+                            })
+                        }
+                     }else if(e.response.success){
+                        kendo.ui.showInfoDialog({
+                            message: '成功'
+                        })
+                    }
+                },
+                batch: true,
+                serverPaging: true,
+                pageSize: 10,
+                schema: {
+                    data: 'rows',
+                    total: 'total',
+                    model: {
+                        id: "trxTypeId",
+                        fields: {
+                            createdBy:{defaultValue:userId},
+                            lastUpdatedBy:{defaultValue:userId},
+                            statusCode: {type: "string",validation:{required:true},defaultValue:"DRAFT"},
+                            versionNumber: {defaultValue:1},
+                            startDate:{type:"date"},
+                            endDate:{type:"date",defaultValue:""}
+                        },
+                        editable: function(col) {    //是否可编辑
+                            if(col=='startDate'&&this.statusCode=='INACTIVE'){
+                                return false;
+                            }
+                            if(col=='endDate'&&this.statusCode=='INACTIVE'){
+                                return false;
+                            }
+                            if(col=='levelNo'&&this.statusCode=='INACTIVE'){
+                                return false;
+                            }
+                            if(col=='statusCode'&&this.statusCode=='INACTIVE'){
+                                return false;
+                            }
+                            if(col=='versionNumber'){
+                                return false;
+                            }
+                            return true;
+                        }
+                    }
+                }
+            });
+        var grid = $("#grid").kendoGrid({
+            dataSource:dataSource,
+            navigatable: true,
+            height: '100%',
+            resizable: true,
+            sortable: true,
+            selectable: 'multiple,rowbox',
+            pageable: {
+                pageSizes: [5, 10, 20, 50],
+                refresh: true,
+                buttonCount: 5
+            },
+            toolbar   : [{
+                template : '<span  id="createGrid" onclick="gridAddRow()" class="btn btn-primary">新建</span>'
+            },{
+                template : '<span  id="saveGrid" onclick="save()" class="btn btn-primary">保存</span>'
+            },{
+                template:'<span  id ="deleteGrid" onclick="deleteData()"  class="btn btn-danger">删除</span>'
+            },{
+                template:'<span  id ="deleteGrid" onclick="createVersion()"  class="btn btn-info">创建版本</span>'
+            }],
+
+            columns: [
+                {field: "trxType", title: '事务类型标识', width: 120,
+                    editor:function(container, options) {
+                        if (options.model.trxTypeId != "") {
+                            container.html(options.model.trxType);
+                            container.removeClass('k-edit-cell');    //更新的时候不能编辑
+                        } else{
+                            $('<input type="text" style="padding:0;height:25px;" name="trxType" class="k-input k-text-box" required validationMessage="必输">')
+                                .appendTo(container);
+                         }
+                    }
+                },
+                {
+                    field: "trxTypeName",
+                    title: '名称',
+                    width: 120,
+                    editor:function (container,options) {
+                        if (options.model.trxTypeId != "") {
+                            container.html(options.model.trxTypeName);
+                            container.removeClass('k-edit-cell');
+                        } else {
+                            $('<input type="text" style="padding:0;height:25px;" name="trxTypeName" class="k-input k-text-box" required validationMessage="必输">')
+                                .appendTo(container);
+                        }
+                    }
+                },
+                {
+                    field: "versionNumber",
+                    title: '版本', width: 80,
+                    editor: function (container, options) {
+                        $('<lable name="versionNumber">1</lable>')
+                            .appendTo(container)
+                    },
+                    attributes: {style: "text-align:center"}
+                },
+                {
+                    field: "statusCode",
+                    title: '状态', width: 80,
+                    template: function(dataItem){
+                        for(var i in trxStatus){
+                            if(dataItem.statusCode == trxStatus[i].value){
+                                return trxStatus[i].meaning
+                            }
+                        }
+                        return ''
+                    },
+                    editor: function(container, options){
+                            $('<input required validationMessage="必输" name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDropDownList({
+                                    dataTextField: "meaning",
+                                    dataValueField: "value",
+                                    valuePrimitive: true,
+                                    dataSource: trxStatus,
+                                });
+                    }
+                },
+                {
+                    field: "startDate",
+                    title: '有效日期从',
+                    width: 150,
+                    format: "{0:yyyy-MM-dd HH:mm:ss}",
+                    editor: function(container, options) {
+                        var d;
+                        $('<input id="startDate" name="' + options.field + '"/>')
+                            .appendTo(container)
+                            .kendoDateTimePicker({
+                                format:"yyyy-MM-dd HH:mm:ss",
+                                change:function(){
+                                    if(this.value()!=null){
+                                        d = this.value();
+                                    }else{
+                                        d= new Date();
+                                    }
+                                    $('#endDate').data('kendoDateTimePicker').min(d)
+                                }
+                            });
+                    }
+                },
+                {
+                    field: "endDate",
+                    title: '有效日期至', width: 150,
+                    format: "{0:yyyy-MM-dd HH:mm:ss}",
+                    editor: function(container, options) {
+                        $('<input id="endDate" name="' + options.field + '"/>')
+                            .appendTo(container)
+                            .kendoDateTimePicker({
+                                format:"yyyy-MM-dd HH:mm:ss",
+                                change:function(){
+                                    $('#endDate').data('kendoDateTimePicker').min(new Date())
+                                }
+                            });
+                    }
+
+                },
+                {
+                    field: "levelNo",
+                    title: '启用层级数', width: 120,
+                    editor: function(container, options){
+                        $('<input required validationMessage="必输" name="' + options.field + '"/>')
+                            .appendTo(container)
+                            .kendoComboBox({
+                                dataTextField: "meaning",
+                                dataValueField: "value",
+                                valuePrimitive: true,
+                                dataSource: trxLevel,
+                            });
+                    }
+                },
+                {
+                    title : '类别层次结构',
+                    width : 120,
+                    template:function (rowdata) {
+                        if(rowdata.trxTypeId) {
+                            return '<a style="text-decoration : underline;color : blue;cursor:pointer" onclick="openDetail(' +rowdata.trxTypeId + ',\'' + rowdata.trxTypeName + '\',\'' + rowdata.trxType + '\',\'' + rowdata.statusCode + '\')">' +
+                                '<font color="blue">'
+                                + '类别层次结构维护'
+                                + '</font></a>';
+                        }else{
+                            return "";
+                        }
+                    }
+                },
+                {command:
+                    [{name:"edit"},
+                    {name:'destroy'}],
+                    attributes: {style: "text-align:center"},
+                    width: "10%"
+                }
+            ],
+            editable: "inline"
+        }).data("kendoGrid");
+        //自动根据当前屏幕大小调整表格
+        Hap.autoResizeGrid("#grid");
+
+        function createVersion() {   //创建版本
+            var checked = grid.selectedDataItems();
+            console.log(checked);
+            if(checked.length==0){
+                kendo.ui.showWarningDialog({
+                    message:'请选择要新增版本的事务类型！'
+                })
+            }else if(checked.length==1 &&checked[0].statusCode=='DRAFT'){
+                kendo.ui.showWarningDialog({
+                    message:'拟定状态下不允许新增版本！'
+                })
+            }else if(checked.length==1 &&checked[0].statusCode!=='DRAFT'){  //创建版本
+                $.ajax({
+                    type:"post",
+                    url:"/trx/addVersion?trxTypeId="+checked[0].trxTypeId+"&trxType="+checked[0].trxType+"&trxTypeName="+checked[0].trxTypeName,
+                    success:function (data) {
+                        if(data.success==true){
+                            kendo.ui.showInfoDialog({
+                                message: '成功'
+                            }).done(function () {
+                                $('#grid').data('kendoGrid').dataSource.page(1);
+                            });
+                        }else{
+                            kendo.ui.showInfoDialog({
+                                message: '失败'
+                            });
+                        }
+                    }
+                })
+            }else if(checked.length>1){
+                kendo.ui.showWarningDialog({
+                    message:'只能选择一行'
+                })
+            }
+        }
+        function openDetail(trxTypeId,trxTypeName,trxType,statusCode) {
+            parent.openTab('TrxTypeDetails' + trxTypeId, trxTypeName, 'trx/trx_detail.html?trxTypeId=' + trxTypeId + '&trxType=' + trxType + '&statusCode='+statusCode+ '&trxTypeName=' +trxTypeName);
+        }
+        function gridAddRow(){
+            $('#grid').data('kendoGrid').addRow();
+        }
+
+        function save(){
+            $('#grid').data('kendoGrid').saveChanges();
+        }
+
+        function deleteData(){
+            var checked = grid.selectedDataItems();
+            if(grid.selectedDataItems().length){
+                kendo.ui.showConfirmDialog({
+                    title:$l('hap.tip.info'),
+                    message: $l('hap.tip.delete_confirm')
+                }).done(function (event) {
+                    if (event.button == 'OK') {
+                        $.each(checked,function(i,v){
+                            grid.dataSource.remove(v)
+                        })
+                        grid.dataSource.sync();
+                    }
+                })
+            }else{
+                kendo.ui.showInfoDialog({
+                    message: $l('hap.tip.selectrow')
+                })
+            }
+        }
+    </script>
+    <style>
+        span.k-icon.k-i-arrow-s {
+            left: 3px;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<#--
+        * description: 事务类型层次结构界面
+        * version: 1.0
+        * author:he.chen@hand-china.com
+        * -->
+    <#include "../include/header.html">
+<body>
+<script src="${base.contextPath}/common/code?trxStatus=TRX_STATUS" type="text/javascript"></script>
+<script src="${base.contextPath}/common/code?categoryCode=HSS_SETUP_CATEGORY_CODE" type="text/javascript"></script>
+<script src="${base.contextPath}/common/code?trxLevelNum=HSS_SETUP_TRX_LEVELNUM" type="text/javascript"></script>
+
+<script>
+    var viewModel =kendo.observable({
+        model:{},
+    })
+    var trxType ='${RequestParameters.trxType!0}';   //获取上个界面的参数
+    var trxTypeName ='${RequestParameters.trxTypeName!0}';
+    var statusCode ='${RequestParameters.statusCode!0}';
+    var trxId=${RequestParameters.trxTypeId!0};
+    viewModel.model.set("trxType",trxType);
+    viewModel.model.set("trxTypeName",trxTypeName);
+    for(var i in trxStatus){
+        if(statusCode == trxStatus[i].value){
+            viewModel.model.set("statusCode",trxStatus[i].meaning);
+        }
+    }
+</script>
+<div id="content-container">
+    <div id="page-content">
+        <div class="panel" style="padding: 0px;border:none;box-shadow: none;">
+            <form class="form-horizontal" id="myForm">
+                <div class="panel-body">
+                    <div class="row" style="margin-bottom: 10px;">
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">事务类型标识</label>
+                                <div class="col-sm-8">
+                                    <input type="text" style="width: 160px;background:#DDDDDD" disabled="true"
+                                           data-bind="value:model.trxType" class="k-textbox">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">名称</label>
+                                <div class="col-sm-8">
+                                    <input type="text"  style="width: 100%;background:#DDDDDD" disabled="true"
+                                           data-bind="value:model.trxTypeName" class="k-textbox">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">状态</label>
+                                <div class="col-sm-8">
+                                    <input type="text" style="width: 100%;background:#DDDDDD" disabled="true" id="statusCode"
+                                           data-bind="value:model.statusCode" class="k-textbox">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row ">
+                            <span class="btn btn-success" type="button" data-bind="click:query">
+                    <@spring.message "hap.query"/></span>
+                        <span class="btn btn-default" type="button" data-bind="click:resetForm">
+                    <@spring.message "hap.reset"/></span>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <div style="clear:both">
+            <div id="grid"></div>
+        </div>
+    </div>
+    <script>kendo.bind($('#page-content'), viewModel);</script>
+
+    <script>
+        var baseUrl="/trx/detail/",
+            dataSource = new kendo.data.TreeListDataSource(
+                {
+                    transport: {
+                        read: {
+                            url: baseUrl+'findTrxDetails?trxId='+trxId,
+                            type: "POST",
+                            dataType: "json"
+                        },
+                        destroy: {
+                            url:   baseUrl+"deleteTrxDetail",
+                            contentType: "application/json",
+                            type: "POST",
+                            dataType: "json"
+                        },
+                        create      : {
+                            url        : baseUrl+'addTrxDetail',
+                            contentType: "application/json",
+                            type       : "POST",
+                            dataType: "json"
+                        },
+                        update      : {
+                            url        : baseUrl+"addTrxDetail",
+                            contentType: "application/json",
+                            type       : "POST",
+                            dataType: "json"
+                        },
+                        parameterMap: function (options, type) {
+                            if (type === "read") {
+                                return Hap.prepareQueryParameter(viewModel.model.toJSON(), options);
+                            }else if(type !== "read"){
+                                options.trxId=trxId;
+                                console.log(options);
+                                return kendo.stringify(options);
+                            }
+                        }
+                    },
+                    requestEnd: function(e) {
+                        if (e.response.success && e.type != "read") {
+                            kendo.ui.showInfoDialog({
+                                message:'成功'
+                            })
+                        }else if(!e.response.success && e.type != "read"){
+                            kendo.ui.showInfoDialog({
+                                message:'事务类别标识或名称不能重复'
+                            })
+                        }
+                    },
+                    schema: {
+                        data: 'rows',
+                        total: 'total',
+                        model: {
+                            id: "trxDetailId",
+                            parentId:"parentId",
+                            expanded: true,
+                            fields: {
+                                parentId:{ field: "parentDetailId",  nullable: true },
+                                trxDetailId:{field: "trxDetailId", type: "number"},
+                                detailTrxType: {field: "detailTrxType",type: "string",editable:true},
+                                detailTrxTypeName: {field: "detailTrxTypeName",type: "string",editable:true},
+                                isDisplayFlag:{defaultValue: 'Y',type: 'boolean',checkedValue:'Y',uncheckedValue:'N'},
+                                gategoryCode: {field: "gategoryCode",type: "string",defaultValue:"CATEGORY",editable:false},
+                                levelNum: {field: "levelNum",type: "string",editable:false}
+                            },
+                        }
+                    }
+                });
+
+        function addChildren(uid,levelNum,trxDetailId){
+            var treeList = $("#grid").data("kendoTreeList");
+            //treeList.addRow($('[data-uid='+uid+']'));
+            var record = treeList.dataSource.add({parentId:trxDetailId,detailTrxTypeName:'',detailTrxType:''})
+            treeList.editRow($('[data-uid='+record.uid+']'))
+        }
+        var grid = $("#grid").kendoTreeList({
+            dataSource:dataSource,
+            navigatable : false,
+            height :  "100%",
+            resizable : true,
+            scrollable : true,
+            selectable:'row',
+            reorderable:true,
+            columnMenu: true,
+            columns: [
+                {
+                    field: "detailTrxType",
+                    expandable: true,
+                    title: '标识',
+                    width: 400,
+                    editor: function(container, options){
+                        var editor = $('<input type="text" style="padding:0;height:25px;" name="detailTrxType" class="k-input k-text-box" required validationMessage="必输">');
+                        editor.css('width','100%');
+                        container.append(editor);
+                    }
+                },
+                {
+                    field: "detailTrxTypeName",
+                    title: '名称',
+                    width: 150,
+                    editor: function(container, options){
+                        var editor = $('<input type="text" style="padding:0;height:25px;" name="detailTrxTypeName" class="k-input k-text-box" required validationMessage="必输">');
+                        editor.css('width','100%');
+                        container.append(editor);
+                    }
+                },
+                {
+                    field: "gategoryCode",
+                    title: '类别标识',
+                    width: 85,
+                    template:function (data) {
+                        for(var k in categoryCode){
+                            if(data.gategoryCode==categoryCode[k].value){
+                                return categoryCode[k].meaning;
+                            }
+                        }
+                        return "";
+                    },
+                },
+                {
+                    field: "levelNum",
+                    title: '层级',
+                    width: 85,
+                    template:function (data) {
+                        var level = dataSource.level(data);   //自动获取层级
+                        if(level==0){
+                            return "ROOT";
+                        }else {
+                            return "LEVEL" + level;
+                        }
+                    }
+                },
+                {
+                    field: "isDisplayFlag",
+                    title: '是否显示',
+                    width: 85,
+                    template: '       <input type="checkbox" disabled="true"  #=isDisplayFlag=="Y" ? \'checked="checked"\':""# id="isDisplayFlag"  name="isDisplayFlag"/>',
+                },
+                {
+                    title: '增加子分类',
+                    width: 85,
+                    template:function (data) {
+                        if(!data.trxDetailId ||statusCode=='ACTIVE' || statusCode=='INACTIVE'){
+                            return "";
+                        }else{
+                           //return '<a href="javascripr:void(0)" onclick="addChildren(\''+data.uid+'\','+data.levelNum+')"><font color="blue">增加子分类</font>';
+                            return '<a href="javascript:void(0);" onclick="addChildren(\''+data.uid+'\','+data.levelNum+','+data.trxDetailId+')"><font color="blue">增加子分类</font></a>'
+                        }
+                    }
+                },
+                {command:
+                    [{name:"edit"},
+                        {name:'destroy'}],
+                    attributes: {style: "text-align:center"},
+                    width: "10%"
+                }
+            ],
+            messages: {
+                commands: {
+                    edit: "编辑",
+                    update: "保存",
+                    canceledit: "取消",
+                    destroy:"删除"
+                }
+            },
+            editable: "inline"
+        }).data("kendoTreeList");
+
+
+
+        var grid = $("#grid").parent();
+        var avaHeight = $(window).height() - grid.offset().top - 10
+        grid.outerHeight(avaHeight)
+        $("#grid").data('kendoTreeList').resize();
+        $(window).resize(function () {
+            var grid = $("#grid").parent();
+            var avaHeight = $(window).height() - grid.offset().top - 10
+            grid.outerHeight(avaHeight)
+            $("#grid").data('kendoTreeList').resize();
+        });
+
+
+        $(document).ready(function(){
+            if(statusCode=='ACTIVE'){
+                kendo.ui.showWarningDialog({
+                    message: '有效状态！'
+                }).done(function (e) {
+                    $("[class='k-button k-button-icontext k-grid-edit']").hide();
+                    $("[class='k-button k-button-icontext k-grid-delete']").hide();
+                })
+            }
+            if(statusCode=='INACTIVE'){
+                kendo.ui.showWarningDialog({
+                    message: '无效状态！'
+                }).done(function (e) {
+                    $("[class='k-button k-button-icontext k-grid-edit']").hide();
+                    $("[class='k-button k-button-icontext k-grid-delete']").hide();
+                })
+            }
+        });
+    </script>
+</div>
+</body>
+</html>

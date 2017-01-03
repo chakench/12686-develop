@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ #{copyright}#
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="hbi.core.task.mapper.TaskMapper">
+
+    <resultMap id="headerResult" type="hbi.core.task.dto.ItemHeader">
+        <id column="ITEM_HEADER_ID" property="itemHeaderId"/>
+        <result column="INTERFACE_NAME" property="interfaceName"/>
+        <result column="DESCRIPTION" property="description"/>
+        <result column="SOURCE_SYSTEM_CODE" property="sourceSystemCode"/>
+        <result column="DATA_TYPE_CODE" property="dataTypeCode"/>
+        <result column="START_DATE" property="startDate"/>
+        <result column="END_DATE" property="endDate"/>
+        <result column="FROZEN_FLAG" property="frozenFlag"/>
+        <result column="ENABLED_FLAG" property="enabledFlag"/>
+        <result column="VALIDATE_CLASS" property="validateClass"/>
+        <result column="CREATION_DATE" property="creationDate"/>
+        <result column="CREATED_BY" property="createdBy"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber"/>
+    </resultMap>
+
+    <!--查询任务行设置头-->
+    <select id="findAllHeader" parameterType="hbi.core.task.dto.ItemHeader" resultMap="headerResult">
+        select ITEM_HEADER_ID,INTERFACE_NAME,a.DESCRIPTION,SOURCE_SYSTEM_CODE,DATA_TYPE_CODE,START_DATE,END_DATE,FROZEN_FLAG,
+        ENABLED_FLAG,VALIDATE_CLASS,a.CREATED_BY,a.CREATION_DATE,MEANING,USER_NAME userName,a.OBJECT_VERSION_NUMBER  from hss_task_item_header_b a,SYS_CODE_VALUE_B b,SYS_USER
+        <where>
+            SOURCE_SYSTEM_CODE=VALUE AND USER_ID=a.CREATED_BY
+            <if test="itemHeaderId!=null and itemHeaderId!=''">
+                AND ITEM_HEADER_ID =#{itemHeaderId}
+            </if>
+            <if test="sourceSystemCode!=null and sourceSystemCode!=''">
+                AND SOURCE_SYSTEM_CODE =#{sourceSystemCode}
+            </if>
+            <if test="interfaceName!=null and interfaceName!=''">
+                and INTERFACE_NAME =#{interfaceName}
+            </if>
+            <if test="description!=null and description!=''">
+                and a.DESCRIPTION =#{description}
+            </if>
+            <if test="meaning!=null and meaning!=''">
+                and meaning =#{meaning}
+            </if>
+        </where>
+    </select>
+
+    <!--删除任务行设置头-->
+    <delete id="deleteHeaders" parameterType="hbi.core.task.dto.ItemHeader">
+        delete from hss_task_item_header_b where ITEM_HEADER_ID=#{itemHeaderId}
+    </delete>
+
+    <!--插入任务行设置头-->
+    <insert id="addHeader" parameterType="hbi.core.task.dto.ItemHeader">
+        insert into hss_task_item_header_b(INTERFACE_NAME,DESCRIPTION,SOURCE_SYSTEM_CODE,DATA_TYPE_CODE,START_DATE,END_DATE,FROZEN_FLAG,
+        ENABLED_FLAG,VALIDATE_CLASS,CREATION_DATE,CREATED_BY,LAST_UPDATE_DATE)
+        values(#{interfaceName},#{description},#{sourceSystemCode},#{dataTypeCode},#{startDate},#{endDate},#{frozenFlag},
+        #{enabledFlag},#{validateClass},#{creationDate},#{createdBy},now())
+    </insert>
+
+    <!--查找头ID-->
+    <select id="selectItemHeaderId" parameterType="hbi.core.task.dto.ItemHeader" resultType="long">
+        select ITEM_HEADER_ID from hss_task_item_header_b where INTERFACE_NAME=#{interfaceName} and SOURCE_SYSTEM_CODE=#{sourceSystemCode}
+        <if test="itemHeaderId!=null">
+            and ITEM_HEADER_ID !=#{itemHeaderId}
+        </if>
+    </select>
+
+    <!--更新-->
+    <update id="updateHeader" parameterType="hbi.core.task.dto.ItemHeader">
+        UPDATE hss_task_item_header_b  a SET INTERFACE_NAME =#{interfaceName},DESCRIPTION =#{description},SOURCE_SYSTEM_CODE =#{sourceSystemCode},DATA_TYPE_CODE =#{dataTypeCode},
+     START_DATE =#{startDate},END_DATE =#{endDate},FROZEN_FLAG =#{frozenFlag},ENABLED_FLAG =#{enabledFlag},VALIDATE_CLASS =#{validateClass},OBJECT_VERSION_NUMBER = OBJECT_VERSION_NUMBER+1,
+     CREATION_DATE =#{creationDate},CREATED_BY =#{createdBy},LAST_UPDATE_DATE=now()
+      WHERE  a.ITEM_HEADER_ID =#{itemHeaderId} and OBJECT_VERSION_NUMBER =#{objectVersionNumber}
+    </update>
+</mapper>

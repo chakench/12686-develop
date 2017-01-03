@@ -1,0 +1,739 @@
+<#include "./include/header.html">
+    <body>
+    <style>
+        span[class='k-window-title'] {
+            user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+    </style>
+    <script src="${base.contextPath}/common/code?taskDataType=TASK_DATA_TYPE" type="text/javascript"></script>
+    <script src="${base.contextPath}/common/code?taskColumType=TASK_COLUM_TYPE" type="text/javascript"></script>
+    <script src="${base.contextPath}/common/code?taskColumValueType=TASK_COLUM_VALUE_TYPE" type="text/javascript"></script>
+    <script src="${base.contextPath}/common/code?taskDateFormat=DATE_FORMAT" type="text/javascript"></script>
+    <div id="content-container">
+        <div id="page-content">
+            <div class="panel" style="padding: 0px;border:none;box-shadow: none;">
+                <form class="form-horizontal" id="myForm">
+                    <div class="panel-body">
+                        <div class="row" style="margin-bottom: 10px;">
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">系统代码</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" style="width: 100%" id="sourceSystemCode" name="sourceSystemCode"
+                                               data-bind="value:model.sourceSystemCode,text:model.sourceSystemCode" class="k-textbox" required validationMessage="必输">
+                                    </div>
+                                    <script>
+                                        $("#sourceSystemCode").kendoLov($.extend(${lovProvider.getLov(base.contextPath, base.locale, "SYSTEM_CODE")}
+                                        ,{ select:function (e) {
+                                                viewModel.model.set("meaning",e.item.meaning);
+                                            }}))
+                                    </script>
+
+                                </div>
+                            </div>
+
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">系统名称</label>
+                                    <div class="col-sm-9">
+                                        <input type="text"  disabled="disabled" style="width: 100%;background-color:#DDDDDD"
+                                               data-bind="value:model.meaning" class="k-textbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">创建人</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" style="width: 100%;background-color:#DDDDDD" disabled="disabled"
+                                           id="createdBy"   data-bind="value:model.userName" class="k-textbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">创建日期</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" style="width: 100%;background-color:#DDDDDD" disabled="disabled" data-role="datetimepicker" id="creationDate"
+                                              data-bind="value:model.creationDate"  class="k-datetimepicker">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row ">
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">映射名称</label>
+                                    <div class="col-sm-9">
+                                        <input style="width: 100%"
+                                             id="interfaceName"  data-bind="value:model.interfaceName" class="k-textbox" required validationMessage="必输">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">数据类型</label>
+                                    <div class="col-sm-9">
+                                        <input style="width: 100%" required validationMessage="必输" id="dataTypeCode"
+                                             name="dataTypeCode"  data-bind="value:model.dataTypeCode" class="k-textbox" >
+                                        <script>
+                                            $("#dataTypeCode").kendoDropDownList({
+                                                dataSource: {
+                                                    data: taskDataType
+                                                },
+                                                index: -1,
+                                                valuePrimitive: true,
+                                                dataTextField: "meaning",
+                                                dataValueField: "meaning"
+                                            });
+
+                                        </script>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">有效日期从</label>
+                                    <div class="col-sm-9">
+                                        <input style="width: 100%;background-color:#DDDDDD" data-role="datetimepicker" disabled="disabled" id="startDate"
+                                              data-bind="value:model.startDate" class="k-datetimepicker">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3  control-label">有效日期至</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" style="width: 100%" data-role="datetimepicker" id="endDate"
+                                               data-bind="value:model.endDate" class="k-datetimepicker">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row ">
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">映射说明</label>
+                                    <div class="col-sm-9">
+                                        <input style="width: 100%" id="description"
+                                               data-bind="value:model.description" class="k-textbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">校验类名</label>
+                                    <div class="col-sm-9">
+                                        <input style="width: 100%" id="validateClass"
+                                               data-bind="value:model.validateClass" class="k-textbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">启用</label>
+                                    <div class="col-sm-3">
+                                        <input  type="checkbox" id="enabledFlag"
+                                               data-bind="value:model.enabledFlag">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">冻结</label>
+                                    <div class="col-sm-3">
+                                        <input  type="checkbox" id="frozenFlag"
+                                                data-bind="value:model.frozenFlag">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row ">
+                            <span class="btn btn-success" type="button" onclick="saveHeader()" id="saveHeader">
+                    <@spring.message "hap.save"/></span>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <div style="clear:both">
+                <div id="taskListGrid"  class="table"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="text/javascript">
+
+        var itemHeaderId =${RequestParameters.itemHeaderId!0};   //获取上个界面的参数
+        var isedit =${RequestParameters.isedit!0};
+        var viewModel = kendo.observable({
+            model: {frozenFlag :"N",
+                enabledFlag :"N"
+            }
+        });
+        function saveHeader() {    //保存头
+            var data= viewModel.model.toJSON();  //获取表单的所有对象的值
+            console.log(data);
+            var validator = $("#myForm").kendoValidator().data("kendoValidator");
+            if (validator.validate()){
+                if(itemHeaderId==0){    //如果是新建,就保存
+                    $.ajax({
+                        type: 'POST',
+                        url: "addHeaders",
+                        dataType: "json",
+                        contentType: "application/json",
+                        data: kendo.stringify([data]),
+                        success: function (data) {
+                            if(data.success==false || data.rows[1]==true){
+                                kendo.ui.showErrorDialog({
+                                    message:"系统代码或映射名称已存在"
+                                });
+                            }
+                            else{
+                                kendo.ui.showInfoDialog({
+                                    message:'成功'
+                                }).done(function () {
+                                    parent.openTab("set_"+data.rows[0], viewModel.model.interfaceName,'task_Line.html?isedit=1&itemHeaderId='+data.rows[0]);
+                                    parent.closeTab("taskLine");
+                                });
+                            }
+                        }
+                    })
+                }else{    //更新
+                    $.ajax({
+                        type: 'POST',
+                        url: "updateHeader",
+                        dataType: "json",
+                        contentType: "application/json",
+                        data: kendo.stringify([data]),
+                        success: function (data) {
+                            if(data.rows[0]==0 && data.rows[1]==true){
+                                kendo.ui.showErrorDialog({
+                                    message:"版本不一致，更新失败"
+                                });
+                            }else if(data.rows[1]==false){
+                                kendo.ui.showErrorDialog({
+                                    message:"系统代码或映射名称已存在"
+                                });
+                            }
+                            else{
+                                kendo.ui.showInfoDialog({
+                                    message:'更新成功'
+                                }).done(function () {
+                                    window.location.reload();  //刷新
+                                });;
+                            }
+                        }
+                    })
+                }
+
+            }
+        }
+        $("#creationDate").kendoDateTimePicker({
+            value:new Date(),
+            format: "yyyy-MM-dd hh:mm:ss"
+        });
+        $("#startDate").kendoDateTimePicker({
+            value:new Date(),
+            format: "yyyy-MM-dd HH:mm:ss"
+        });
+        $("#endDate").kendoDateTimePicker({
+            value:new Date(),
+            format: "yyyy-MM-dd HH:mm:ss"
+        });
+        function gridAddRow() {  //新增一行
+            if($("#sourceSystemCode").val()==''){
+                kendo.ui.showInfoDialog({
+                    message:"请先新建设置头"
+                })
+            }else{
+                $('#taskListGrid').data('kendoGrid').addRow();
+            }
+        }
+        if (isedit) {    //若是查询
+            $.ajax({
+                type : 'post',
+                url    : 'findAllHeader?itemHeaderId='+itemHeaderId,
+                success: function (args) {
+                    itemHeaderId = args.rows[0].itemHeaderId;
+                    console.log(args.rows[0]);
+                    viewModel.model.set("objectVersionNumber",args.rows[0].objectVersionNumber);
+                    var a0 = args.rows[0] || {};
+                    for (var k in a0) {
+                        viewModel.model.set(k, a0[k]);
+                    }
+                }
+            });
+        }
+
+        if(isedit){             //处理冻结
+            $(document).ready(function(){
+
+                $("#frozenFlag").kendoCheckbox({
+                    change:function(){
+                        if(viewModel.model.frozenFlag=="Y"){
+                            kendo.ui.showInfoDialog({
+                                message:'当前页面为冻结状态'
+                            }).done(function (e) {
+                                $("[class='k-button k-button-icontext k-grid-edit']").hide();
+                                $("[class='k-button k-button-icontext k-grid-delete']").hide();
+                                $("input[name='sourceSystemCode_input']").parent().attr("class","k-dropdown-wrap k-state-disabled").unbind();
+                                $("input[name='sourceSystemCode_input']").attr({"readonly":true,"aria-disabled":"true"}).css("background", "#DDDDDD").unbind();
+                                $("input[name='dataTypeCode']").parent().removeClass("k-state-default").addClass("k-state-disabled").unbind();
+                                $("input[name='dataTypeCode']").prev().css("background", "#DDDDDD");
+
+                                $("#interfaceName").attr("disabled",true).css("background", "#DDDDDD");
+                                $("#endDate").data("kendoDateTimePicker").enable(false);
+                                $("#endDate").css("background", "#DDDDDD");
+                                $("#description").attr("disabled",true).css("background", "#DDDDDD");
+                                $("#validateClass").attr("disabled",true).css("background", "#DDDDDD");
+                                $("#enabledFlag").data("kendoCheckbox").enable(false);
+                                $("#createGrid").attr("disabled",true);
+                                $("#createGrid").removeAttr("onclick");
+                                $("#saveGrid").attr("disabled",true);
+                                $("#saveGrid").removeAttr("onclick");
+                                $("#deleteGrid").attr("disabled",true);
+                                $("#deleteGrid").removeAttr("onclick");
+                            })
+                        }
+                        if(viewModel.model.frozenFlag=="N"){
+
+                            $("#enabledFlag").data("kendoCheckbox").enable(true);
+                            $("input[name='sourceSystemCode_input']").parent().addClass("k-state-hover");
+                            $("input[name='sourceSystemCode_input']").attr({"disabled":"false","aria-disabled":"false"}).css("background", "#FFFFFF");
+                            $("input[name='dataTypeCode']").prev().css("background", "#FFFFFF");
+                            $("#interfaceName").attr("disabled",false).css("background", "#FFFFFF");
+                            $("#endDate").data("kendoDateTimePicker").enable(true);
+                            $("#endDate").css("background", "#FFFFFF");
+                            $("#description").attr("disabled",false).css("background", "#FFFFFF");
+                            $("#validateClass").attr("disabled",false).css("background", "#FFFFFF");
+                            $("#createGrid").removeAttr("disabled");
+                            $("#createGrid").attr("onclick","gridAddRow();");
+                            $("#saveGrid").removeAttr("disabled");
+                            $("#saveGrid").attr("onclick","saveGrid();");
+                            $("#deleteGrid").removeAttr("disabled");
+                            $("#deleteGrid").attr("onclick","deleteData();");
+                            $("[class='k-button k-button-icontext k-grid-edit']").show();
+                            $("[class='k-button k-button-icontext k-grid-delete']").show();
+                        }
+                    }
+                });
+            });
+        }
+        var userName='${Session.userName}';
+        var userId='${Session.userId}';
+        viewModel.model.set("userName",userName);
+        viewModel.model.set("creationDate",new Date());
+        viewModel.model.set("startDate",new Date());
+        viewModel.model.set("createdBy",userId);
+        $("#enabledFlag").kendoCheckbox({
+            checkedValue:'Y',
+            uncheckedValue:'N'
+        });
+        $("#frozenFlag").kendoCheckbox({
+            checkedValue:'Y',
+            uncheckedValue:'N',
+        });
+        kendo.bind($('#page-content'), viewModel);
+        dataSource = new kendo.data.DataSource(
+            {
+                transport: {
+                    read: {
+                        url: 'findHeaderLine?itemHeaderId='+itemHeaderId,
+                        type: "POST",
+                        dataType: "json"
+                    },
+                    destroy: {
+                        url:"deleteLines",
+                        contentType: "application/json",
+                        type: "POST",
+                        dataType: "json"
+                    },
+                    create      : {
+                        url        : "addLines",
+                        contentType: "application/json",
+                        type       : "POST",
+                        dataType: "json"
+                    },
+                    update      : {
+                        url        : "updateLines",
+                        contentType: "application/json",
+                        type       : "POST",
+                        dataType: "json"
+                    },
+                    parameterMap: function (options, type) {
+                        if (type === "read") {
+                            return {page:options.page,
+                                pageSize:options.pageSize}
+                        }else if(type !== "read" && options.models){
+                            return kendo.stringify(options.models);
+                        }
+                    }
+                },
+                requestEnd: function(e) {
+                    if (e.response.success && e.type != "read") {
+                        kendo.ui.showInfoDialog({
+                            message:'成功'
+                        })
+                    }
+                },
+                    batch: true,
+                serverPaging: true,
+                pageSize: 10,
+                schema: {
+                    data: 'rows',
+                    total: 'total',
+                    model: {
+                        id: "itemLineId",
+                        fields: {
+                            createdBy:{defaultValue: userId},
+                            itemHeaderId:{defaultValue: itemHeaderId},
+                            requiredFlag: {defaultValue: 'Y', type: 'boolean', checkedValue: 'Y', uncheckedValue: 'N'},
+                            columnLen	: {type: 'number'},
+                            displayWidth: {defaultValue: 120},
+                            showFlag:{defaultValue: 'Y', type: 'boolean', checkedValue: 'Y', uncheckedValue: 'N'},
+                            enabledFlag:{defaultValue: 'Y', type: 'boolean', checkedValue: 'Y', uncheckedValue: 'N'},
+                            uniqueFlag:{defaultValue: 'N', type: 'boolean', checkedValue: 'Y', uncheckedValue: 'N'}
+                        },
+                        editable:function (col) {
+                            if(col=="columnFormat" &&(this.valueType=="VARCHAR_TYPE" ||this.valueType=="NUMBER_TYPE")){
+                                return false;
+                            }
+                            if(col=="columnLen" && this.valueType=="DATE_TYPE"){
+                                return false;
+                            }
+                            return true;
+                        }
+                    }
+                }
+            });
+        var dataArray = [];
+        for(var i=0;i<100;i++){
+
+            dataArray.push({"meaning": "VALUE"+(i+1)});
+        }
+        var columnNameDataSource = new kendo.data.DataSource({
+            data:dataArray
+        })
+
+        var grid = $("#taskListGrid").kendoGrid({
+            dataSource: dataSource,
+            navigatable: true,
+            height: '100%',
+            resizable: true,
+            sortable: true,
+            selectable: 'multiple,rowbox',
+            pageable: {
+                pageSizes: [5, 10, 20, 50],
+                refresh: true,
+                buttonCount: 5
+            },
+            toolbar   : [{
+                template : '<span  id="createGrid" onclick="gridAddRow()" class="btn btn-primary">新建</span>'
+            },{
+                template : '<span  id="saveGrid" onclick="save()" class="btn btn-primary">保存</span>'
+            },{
+                template:'<span  id ="deleteGrid" onclick="deleteData()"  class="btn btn-danger">删除</span>'
+            }],
+
+            columns: [
+                {field: "titleText", title: '字段描述', width: 80,
+                    editor: function(container, options){
+                        var editor = $('<input type="text" name="titleText" class="k-input k-text-box" required validationMessage="必输">');
+                        editor.css('width','100%');
+                        container.append(editor);
+                    }
+                },
+                {
+                    field: "columnTypeCode",
+                    title: '字段类型',
+                    width: 80,
+                    template: function(dataItem){
+                        for(var i in taskColumType){
+                            if(dataItem.columnTypeCode == taskColumType[i].value){
+                                return taskColumType[i].meaning
+                            }
+                        }
+                        return ''
+                    },
+                    editor: function(container, options){
+                        $('<input required validationMessage="必输" name="' + options.field + '"/>')
+                            .appendTo(container)
+                            .kendoComboBox({
+                                dataTextField: "meaning",
+                                dataValueField: "value",
+                                valuePrimitive: true,
+                                dataSource: taskColumType,
+                            });
+
+                    }
+                },
+                {
+                    field: "columnName",
+                    title: '字段', width: 80,
+                    editor: function(container, options){
+                        var editor = $('<input type="text" name="columnName" class="k-input k-text-box" required validationMessage="必输">')
+                            .appendTo(container).kendoComboBox({
+                                valuePrimitive: true,
+                                dataTextField: "meaning",
+                                dataValueField: "meaning",
+                                dataSource: columnNameDataSource
+                            });
+                    }
+
+                },
+                {
+                    field: "seqNum",
+                    title: '序号',
+                    width: 80,
+                    editor: function(container, options){
+                        var html = '<input class="k-input"  name="seqNum"  type="text">';
+                        $(html).appendTo(container).kendoNumericTextBox({
+                            format: "9",
+                            min:1
+                        });
+                    }
+                },
+                {
+                    field: "valueType",
+                    title: '值类型', width: 80,
+                    template: function(dataItem){
+                        for(var i in taskColumValueType){
+                            if(dataItem.valueType == taskColumValueType[i].value){
+                                return taskColumValueType[i].meaning
+                            }
+                        }
+                        return ''
+                    },
+                    editor: function(container, options){
+                        $('<input id="valueType" required validationMessage="必输" name="' + options.field + '"/>')
+                            .appendTo(container)
+                            .kendoComboBox({
+                                dataTextField: "meaning",
+                                dataValueField: "value",
+                                valuePrimitive: true,
+                                dataSource: taskColumValueType,
+                                change: function(e) {
+                                    var d = this.value();
+                                    if(d=="DATE_TYPE") {
+                                        options.model.set('columnLen', null);
+                                        $('#columnLen').data('kendoNumericTextBox').enable(false);
+                                        $('#columnFormat').data('kendoComboBox').enable(true);
+                                    }
+                                    else{
+                                        options.model.set('columnFormat', null);
+                                        $('#columnLen').data('kendoNumericTextBox').enable(true);
+                                        $('#columnFormat').data('kendoComboBox').enable(false);
+                                    }
+
+                                }
+                            });
+                    }},
+                {
+                    field: "columnLen",
+                    title: '长度', width: 80,
+                    editor: function (container, options) {
+                        $('<input id="columnLen" type="text" name="columnLen" class="k-input k-text-box" >')
+                            .appendTo(container).kendoNumericTextBox({
+                            format: "9",
+                            min:1
+                        });
+
+                    }
+                },
+                {
+                    field : "valueSet",
+                    title : '验证值集',
+                    width : 80,
+                    template        : function (dataItem) {
+                        return dataItem['valueSet'] || '';
+                    },
+                    editor: function(container, options){
+                        $('<input name="' + options.field + '"/>')
+                            .appendTo(container)
+                            .kendoLov($.extend({"queryColumns":1,
+                                "height":400,"width":400,"readonly":true,
+                                "dataValueField":"code",
+                                "dataTextField":"code","title":"验证值集",
+                                "placeholder":"验证值集",
+                                "form":"<div class='form-group' style='width:100.0%;float:left;margin-left:5px;'>" +
+                                "<label class='col-sm-3 control-label'>代码</label>" +
+                                "<div class='col-sm-9'><input name='code' data-bind='value:data.code' style='width:100%'></div></div><div class='form-group' style='width:100.0%;float:left;margin-left:5px;'><label class='col-sm-3 control-label'>描述</label><div class='col-sm-9'><input name='description' data-bind='value:data.description' style='width:100%'></div></div>",
+                                "formItemMap":{"code":{"type":"kendoMaskedTextBox"},"description":{"type":"kendoMaskedTextBox"}},
+                                "grid":{"height":400,"url":"/common/lov/HPS_FND_VALIDATE","columns":[{"field":"code","title":"代码","width":200,"attributes":{"style":"text-align:center"}},{"field":"description","title":"描述","width":200,"attributes":{"style":"text-align:center"}}]}}, {
+                                textField: 'valueSet',
+                                model    : options.model,
+                            }));
+                    }
+                },
+                {
+                    field: "columnFormat",
+                    title: '掩码格式',
+                    width: 80,
+                    template: function (item) {
+                        for (var i in taskDateFormat) {
+                            if (taskDateFormat[i].value == item.columnFormat) {
+                                return taskDateFormat[i].meaning;
+                            }
+                        }
+                        return '';
+                    },
+                    editor: function (container, options) {
+                        $('<input   id="columnFormat" name="' + options.field + '"/>')
+                            .appendTo(container)
+                            .kendoComboBox({
+                                dataTextField: "meaning",
+                                dataValueField: "value",
+                                valuePrimitive: true,
+                                dataSource: taskDateFormat,
+                            });
+
+                    }
+                },
+                {
+                    field : "requiredFlag",
+                    title : '必输',
+                    width : 80,
+                    attributes: {style: "text-align:center"}
+                },
+                {
+                    field : "showFlag",
+                    title : '显示',
+                    width : 80,
+                    attributes: {style: "text-align:center"}
+                },
+                {
+                    field : "enabledFlag",
+                    title : '启用',
+                    width : 80,
+                    attributes: {style: "text-align:center"}
+                },
+                {
+                    field : "uniqueFlag",
+                    title : '唯一性',
+                    width : 80,
+                    attributes: {style: "text-align:center"}
+                },
+                {
+                    field : "displayWidth",
+                    title : '显示宽度',
+                    width : 80
+                },{command: [{name:"edit"},
+                           {name:'destroy'}],
+                    attributes: {style: "text-align:center"},
+                    width: "10%"
+                }
+            ],
+            editable: "inline"
+        }).data("kendoGrid");
+
+        function deleteData() {
+            var checked = grid.selectedDataItems();
+            if(grid.selectedDataItems().length){
+                kendo.ui.showConfirmDialog({
+                    title:$l('hap.tip.info'),
+                    message: $l('hap.tip.delete_confirm')
+                }).done(function (event) {
+                    if (event.button == 'OK') {
+                        $.each(checked,function(i,v){
+                            grid.dataSource.remove(v)
+                        })
+                        grid.dataSource.sync();
+                    }
+                })
+            }else{
+                kendo.ui.showInfoDialog({
+                    message: $l('hap.tip.selectrow')
+                })
+            }
+        }
+        function save() {
+            $(".k-icon k-i-refresh").attr("onclick");
+            $('#taskListGrid').data('kendoGrid').saveChanges();
+        }
+        Hap.autoResizeGrid("#taskListGrid");
+
+        //日期校验
+        $("#endDate").bind("change",function(){
+            var from = $("#startDate").val();
+            var end = $("#endDate").val();
+            if(from != ''){
+                var from_Date = new Date(from);
+                var end_Date = new Date(end);
+                if(from_Date > end_Date){
+                    kendo.ui.showInfoDialog({
+                        message:'结束时间必须大于开始时间!'
+                    }).done(function(e){
+                        $("#endDate").val("");
+                    });
+                }
+            }
+        });
+
+    </script>
+    <style type="text/css">
+
+        .task-resolved {
+            color: blue;
+        }
+
+        .task-pending {
+            color: lightblue;
+        }
+
+        .priority-low {
+            width: 80%;
+            height: 20px;
+            background: #00AA00;
+            border-radius: 5px 5px 5px 5px;
+            box-shadow: 0 0 3px #947575;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+
+        .priority-median {
+            width: 80%;
+            height: 20px;
+            background: #FFA500;
+            border-radius: 5px 5px 5px 5px;
+            box-shadow: 0 0 3px #947575;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+        input[type="checkbox"] {
+            position: relative;
+            top: 6px;
+        }
+        span.k-icon.k-i-arrow-s {
+            left: 5px;
+        }
+        span.k-icon.k-i-search {
+            left: 2px;
+        }
+        .priority-high {
+            width: 80%;
+            height: 20px;
+            background: #DD0000;
+            border-radius: 5px 5px 5px 5px;
+            box-shadow: 0 0 3px #947575;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+        element.style {
+            left: 235px;
+            top: 20px;
+        }
+    </style>
+    </body>
+    </html>

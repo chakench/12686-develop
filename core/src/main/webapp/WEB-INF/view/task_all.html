@@ -1,0 +1,242 @@
+<#--
+        * description: 任务单行模板设置界面
+        * version: 1.0
+        * author:he.chen@hand-china.com
+        * -->
+    <#include "./include/header.html">
+        <body>
+        <script type="text/javascript">
+            var viewModel = kendo.observable({
+                model: {},
+                createFunction: function(){
+                    window.top.openTab("taskLine", '新建', 'task_line.html', true);
+                },
+                queryResource: function (e) {
+                    $('#grid').data('kendoGrid').dataSource.page(1);
+                },
+                resetForm        : function (e) {
+                    var formData = viewModel.model.toJSON();
+                    for (var k in formData) {
+                        viewModel.model.set(k, null);
+                    }
+                }
+            });
+        </script>
+        <div id="dialogEdit" style="display: none"></div>
+        <div id="page-content">
+            <div class="pull-left" id="toolbar-btn" style="padding-bottom:10px;">
+                <span class="btn btn-primary" style="float:left;margin-right:5px;"  data-bind="click:createFunction"><@spring.message "hap.new"/></span>
+                <span onclick="deleteData()" class="btn btn-danger" style="float:left;"><@spring.message "hap.delete"/></span>
+            </div>
+            <script>kendo.bind($('#toolbar-btn'), viewModel);</script>
+            <div class="pull-right" id="query-form" style="padding-bottom:10px;">
+                <input data-role="maskedtextbox" placeholder='系统代码' type="text" style="width: 150px;float:left;margin-right:5px;" data-bind="value:model.sourceSystemCode" class="k-textbox">
+                <input data-role="maskedtextbox" placeholder='系统名称' type="text" style="width: 150px;float:left;margin-right:5px;" data-bind="value:model.meaning" class="k-textbox">
+                <input data-role="maskedtextbox" placeholder='映射名称' type="text" style="width: 150px;float:left;margin-right:5px;" data-bind="value:model.interfaceName" class="k-textbox">
+                <input data-role="maskedtextbox" placeholder='映射说明' type="text" style="width: 150px;float:left;margin-right:5px;" data-bind="value:model.description" class="k-textbox">
+                <span class="btn btn-primary" data-bind="click:queryResource" style="width: 80px;float:left;margin-right:5px;" type="submit"><@spring.message "hap.query"/></span>
+                <span class="btn btn-default" data-bind="click:resetForm" style="width: 80px;float:left;margin-right:5px;" type="text"><@spring.message "hap.reset"/></span>
+                <div style="clear:both"></div>
+            </div>
+            <script>kendo.bind($('#query-form'), viewModel);</script>
+            <div style="clear: both;">
+                <div id="grid"></div>
+            </div>
+        </div>
+
+        <div id="editWin"></div>
+        <div id="newWin"></div>
+        <script type="text/javascript">
+
+            $('#query-form input').keydown(function (e) {
+                if (e.keyCode == 13) {
+                    e.target.blur();
+                    viewModel.queryResource(e);
+                }
+            });
+
+
+            function findTask(name,id){
+                parent.openTab("set_"+id,name,'task_line.html?isedit=1&itemHeaderId='+id+ '');
+            };
+
+            var dataSource = new kendo.data.DataSource({
+                    transport: {
+                        read: {
+                            url: "findAllHeader",
+                            type    : "POST",
+                            dataType: "json"
+                        },
+                        destroy: {
+                            url:  "deleteHeaders",
+                            contentType: "application/json",
+                            type: "POST"
+                        },
+                        parameterMap: function (options, type) {
+                            if (type !== "read" && options.models) {
+                                var datas = Hap.prepareSubmitParameter(options, type);
+                                return kendo.stringify(datas);
+                            } else if (type === "read") {
+                                return {sourceSystemCode:viewModel.model.sourceSystemCode,
+                                    meaning :viewModel.model.meaning,
+                                    interfaceName:viewModel.model.interfaceName,
+                                    description:viewModel.model.description,
+                                    page:options.page,
+                                    pageSize:options.pageSize}
+                            }
+                        }
+                    },requestEnd: function(e) {
+                        if (e.response.success && e.type != "read") {
+                            kendo.ui.showInfoDialog({
+                                message:'成功'
+                            })
+                        }
+                     },
+                    batch: true,
+                    serverPaging: true,
+                    pageSize: 10,
+                    schema: {
+                        data: 'rows',
+                        total: 'total',
+                        model: {
+                            id: "itemHeaderId",
+                            fields: {
+                            }
+                        }
+                    }
+                });
+            var grid = $("#grid").kendoGrid({
+                dataSource: dataSource,
+                navigatable: true,
+                height: '100%',
+                resizable: true,
+                scrollable: true,
+                editable:true,
+                selectable:'multiple,rowbox',
+                pageable: {
+                    pageSizes: [5, 10, 20, 50],
+                    refresh: true,
+                    buttonCount: 5
+                },
+                columns: [
+                    {
+                        field: "sourceSystemCode",
+                        title: '系统代码',
+                        width: 100
+                    },
+                    {
+                        field: "meaning",
+                        title: '系统名称',
+                        width: 100
+                    },
+                    {
+                        field: "interfaceName",
+                        title: '映射名称',
+                        width: 140,
+                        template : function(rowdata){
+                            return '<a style="text-decoration : underline;color : blue;cursor:pointer" onclick="findTask(\''+rowdata.interfaceName+'\''+',\''+rowdata.itemHeaderId+'\')">'
+                                + rowdata.interfaceName
+                                + '</a>';
+                        }
+                    },
+                    {
+                        field: "description",
+                        title: '映射说明',
+                        width: 140
+                    },
+                    {
+                        field: "dataTypeCode",
+                        title: '数据类型',
+                        width: 140,
+                        template        : function (dataItem) {
+                            return dataItem['dataTypeCode'] || '';
+                        }
+                    },
+                    {
+                        field   : "userName",
+                        title   : '创建人',
+                        width   : 100,
+
+                    },
+                    {
+                        field   : "creationDate",
+                        title   : '创建日期',
+                        width   : 120,
+
+                    },
+                    {
+                        field   : "startDate",
+                        title   : '有效日期从',
+                        width   : 120,
+
+                    },
+                    {
+                        field   : "endDate",
+                        title   : '有效日期至',
+                        width   : 120,
+
+                    },
+                    {
+                        field   : "validateClass",
+                        title   : '校验类名',
+                        width   : 100,
+
+                    },
+                    {
+                        field   : "enabledFlag",
+                        title   : '启用',
+                        width   : 100,
+                        template:function (data) {
+                            if(data.enabledFlag=='Y'){
+                                return "<input type='checkbox' checked>";
+                            }else{
+                                return "<input type='checkbox'>";
+                            }
+                        }
+                    }
+                ],
+                editable: "inline"
+            }).data("kendoGrid");
+
+
+            function deleteData() {
+
+                var checked = grid.selectedDataItems();
+                if(grid.selectedDataItems().length){
+                    kendo.ui.showConfirmDialog({
+                        title:$l('hap.tip.info'),
+                        message: $l('hap.tip.delete_confirm')
+                    }).done(function (event) {
+                        if (event.button == 'OK') {
+                            $.each(checked,function(i,v){
+                                grid.dataSource.remove(v)
+                            })
+                            grid.dataSource.sync();
+                        }
+                    })
+                }else{
+                    kendo.ui.showInfoDialog({
+                        message: $l('hap.tip.selectrow')
+                    })
+                }
+            }
+
+            <!--function editFunctionResources(){-->
+                <!--var checked = grid.selectedDataItems();-->
+                <!--if(checked.length == 1){-->
+                    <!--var data = grid.dataItem(grid.select());-->
+                    <!--grid.editRow(data);-->
+                <!--}else{-->
+                    <!--kendo.ui.showInfoDialog({-->
+                        <!--message: $l('hap.tip.selectrow')-->
+                    <!--})-->
+                <!--}-->
+            <!--}-->
+
+            //自动根据当前屏幕大小调整表格
+            Hap.autoResizeGrid("#grid");
+
+        </script>
+
+        </body>
+        </html>

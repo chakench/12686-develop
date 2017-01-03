@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ #{copyright}#
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="hbi.core.trx.mapper.TrxTypeMapper">
+    <resultMap id="results" type="hbi.core.trx.dto.TrxType">
+        <id property="trxTypeId" column="TRX_TYPE_ID"/>
+        <result property="trxType" column="TRX_TYPE"/>
+        <result property="trxTypeName" column="TRX_TYPE_NAME"/>
+        <result property="versionNumber" column="VERSION_NUMBER"/>
+        <result property="statusCode" column="STATUS_CODE"/>
+        <result property="startDate" column="START_DATE"/>
+        <result property="endDate" column="END_DATE"/>
+        <result property="levelNo" column="LEVEL_NO"/>
+        <result property="objectVersionNumber" column="OBJECT_VERSION_NUMBER"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="lastUpdatedBy" column="LAST_UPDATED_BY"/>
+    </resultMap>
+    <!--查询所有事物-->
+    <select id="findAll" parameterType="hbi.core.trx.dto.TrxType" resultMap="results">
+        select TRX_TYPE_ID,TRX_TYPE,TRX_TYPE_NAME,VERSION_NUMBER,STATUS_CODE,START_DATE,END_DATE,LEVEL_NO,OBJECT_VERSION_NUMBER,CREATED_BY,LAST_UPDATED_BY
+        from HSS_SETUP_TRX_TYPE_B
+        <where>
+            <if test="trxType!=null and trxType!=''">
+                TRX_TYPE=#{trxType}
+            </if>
+            <if test="trxTypeName!=null and trxTypeName!=''">
+                and TRX_TYPE_NAME=#{trxTypeName}
+            </if>
+            <if test="statusCode!=null and statusCode!=''">
+                and STATUS_CODE=#{statusCode}
+            </if>
+        </where>
+        order by TRX_TYPE,VERSION_NUMBER
+    </select>
+
+    <delete id="deleteTrxType" parameterType="hbi.core.trx.dto.TrxType">
+        DELETE FROM HSS_SETUP_TRX_TYPE_B WHERE TRX_TYPE_ID = #{trxTypeId}
+    </delete>
+
+    <insert id="addTrxType" parameterType="hbi.core.trx.dto.TrxType" useGeneratedKeys="true" keyProperty="trxTypeId">
+        insert into HSS_SETUP_TRX_TYPE_B(TRX_TYPE,TRX_TYPE_NAME,VERSION_NUMBER,STATUS_CODE,START_DATE,END_DATE,LEVEL_NO,CREATION_DATE,LAST_UPDATE_DATE,CREATED_BY,LAST_UPDATED_BY)
+        values(#{trxType},#{trxTypeName},#{versionNumber},#{statusCode},#{startDate},#{endDate},#{levelNo},now(),now(),#{createdBy},#{lastUpdatedBy})
+    </insert>
+    <!--判断标识，名字与版本号是否存在-->
+    <select id="isExist" parameterType="hbi.core.trx.dto.TrxType" resultType="int">
+        select count(0) from HSS_SETUP_TRX_TYPE_B where VERSION_NUMBER=#{versionNumber} and TRX_TYPE=#{trxType}
+        or TRX_TYPE_NAME=#{trxTypeName} and VERSION_NUMBER=#{versionNumber}
+    </select>
+
+    <!--更新-->
+    <update id="updateTrxType" parameterType="hbi.core.trx.dto.TrxType">
+        update HSS_SETUP_TRX_TYPE_B set STATUS_CODE=#{statusCode},START_DATE=#{startDate},END_DATE=#{endDate},
+        LEVEL_NO=#{levelNo},LAST_UPDATE_DATE=now(),OBJECT_VERSION_NUMBER=OBJECT_VERSION_NUMBER+1,LAST_UPDATED_BY=#{lastUpdatedBy}
+        where TRX_TYPE_ID=#{trxTypeId} and OBJECT_VERSION_NUMBER=#{objectVersionNumber}
+    </update>
+    <!--统计不同版本的同种事务类型的有效状态数-->
+    <select id="countOfActive" parameterType="hbi.core.trx.dto.TrxType" resultType="int">
+       select count(0) from HSS_SETUP_TRX_TYPE_B where TRX_TYPE=#{trxType} and TRX_TYPE_NAME=#{trxTypeName}  and STATUS_CODE='ACTIVE'
+       <if test="trxTypeId!=null">
+           and TRX_TYPE_ID=#{trxTypeId}
+       </if>
+    </select>
+    <!--创建版本   拷贝数据-->
+    <insert id="addVersion" parameterType="hbi.core.trx.dto.TrxType" useGeneratedKeys="true" keyProperty="trxTypeId">
+        insert into HSS_SETUP_TRX_TYPE_B(TRX_TYPE,TRX_TYPE_NAME,VERSION_NUMBER,ORI_TRX_TYPE_ID,
+        STATUS_CODE,START_DATE,END_DATE,LEVEL_NO,SSC_ID,OBJECT_VERSION_NUMBER,CREATION_DATE,LAST_UPDATE_DATE)
+        select TRX_TYPE,TRX_TYPE_NAME,(select max(VERSION_NUMBER)+1 from HSS_SETUP_TRX_TYPE_B where TRX_TYPE=#{trxType} and TRX_TYPE_NAME=#{trxTypeName}),ORI_TRX_TYPE_ID,
+        'DRAFT',START_DATE,END_DATE,LEVEL_NO,SSC_ID,OBJECT_VERSION_NUMBER,CREATION_DATE,LAST_UPDATE_DATE
+        from  HSS_SETUP_TRX_TYPE_B where TRX_TYPE_ID=#{trxTypeId}
+    </insert>
+</mapper>

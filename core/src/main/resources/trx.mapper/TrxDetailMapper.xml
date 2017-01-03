@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ #{copyright}#
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="hbi.core.trx.mapper.TrxDetailMapper">
+
+    <resultMap id="results" type="hbi.core.trx.dto.TrxDetail">
+        <id property="trxDetailId" column="TRX_DETAIL_ID"/>
+        <result property="trxId" column="TRX_ID"/>
+        <result property="detailTrxType" column="DETAIL_TRX_TYPE"/>
+        <result property="detailTrxTypeName" column="DETAIL_TRX_TYPE_NAME"/>
+        <result property="gategoryCode" column="CATEGORY_CODE"/>
+        <result property="parentDetailId" column="PARENT_DETAIL_ID"/>
+        <result property="isDisplayFlag" column="IS_DISPLAY_FLAG"/>
+        <result property="objectVersionNumber" column="OBJECT_VERSION_NUMBER"/>
+    </resultMap>
+    <select id="findTrxDetails" parameterType="hbi.core.trx.dto.TrxDetail" resultMap="results">
+        select TRX_DETAIL_ID,TRX_ID,DETAIL_TRX_TYPE,DETAIL_TRX_TYPE_NAME,CATEGORY_CODE,PARENT_DETAIL_ID,IS_DISPLAY_FLAG,OBJECT_VERSION_NUMBER from
+        HSS_SETUP_TRX_DETAIL_B where TRX_ID=#{trxId}
+        <if test="parentDetailId !=null">
+            and PARENT_DETAIL_ID=#{parentDetailId}
+        </if>
+    </select>
+
+    <insert id="addTrxDetail" parameterType="hbi.core.trx.dto.TrxDetail" useGeneratedKeys="true" keyProperty="trxDetailId">
+        insert into HSS_SETUP_TRX_DETAIL_B(TRX_ID,DETAIL_TRX_TYPE,
+        DETAIL_TRX_TYPE_NAME,CATEGORY_CODE,PARENT_DETAIL_ID,IS_DISPLAY_FLAG,OBJECT_VERSION_NUMBER,CREATION_DATE,LAST_UPDATE_DATE)
+        values(#{trxId},#{detailTrxType},#{detailTrxTypeName},#{gategoryCode},#{parentDetailId},#{isDisplayFlag},#{objectVersionNumber},now(),now())
+    </insert>
+
+    <delete id="deleteTrxDetail" parameterType="hbi.core.trx.dto.TrxDetail">
+        delete from HSS_SETUP_TRX_DETAIL_B
+        <where>
+            <choose>
+                <when test="trxDetailId!=null and trxDetailId!=0">
+                    TRX_DETAIL_ID =#{trxDetailId}
+                </when>
+                <otherwise>
+                    TRX_ID=#{trxId}
+                </otherwise>
+            </choose>
+        </where>
+    </delete>
+
+    <!--判断标识或名字是否存在-->
+    <select id="isExist" parameterType="hbi.core.trx.dto.TrxDetail" resultType="int">
+        select count(0) from HSS_SETUP_TRX_DETAIL_B where DETAIL_TRX_TYPE=#{detailTrxType} and DETAIL_TRX_TYPE_NAME=#{detailTrxTypeName}
+    </select>
+
+    <update id="updateTrxDetail" parameterType="hbi.core.trx.dto.TrxDetail">
+        update HSS_SETUP_TRX_DETAIL_B set DETAIL_TRX_TYPE=#{detailTrxType},DETAIL_TRX_TYPE_NAME=#{detailTrxTypeName},IS_DISPLAY_FLAG=#{isDisplayFlag},
+        OBJECT_VERSION_NUMBER=OBJECT_VERSION_NUMBER+1,LAST_UPDATE_DATE=now() where TRX_DETAIL_ID=#{trxDetailId} and OBJECT_VERSION_NUMBER=#{objectVersionNumber}
+    </update>
+
+    <select id="findOneTrxDetail" parameterType="long" resultMap="results">
+        select TRX_DETAIL_ID,TRX_ID,DETAIL_TRX_TYPE,DETAIL_TRX_TYPE_NAME,CATEGORY_CODE,PARENT_DETAIL_ID,IS_DISPLAY_FLAG,OBJECT_VERSION_NUMBER from
+        HSS_SETUP_TRX_DETAIL_B where TRX_ID=#{trxId} and PARENT_DETAIL_ID is null
+    </select>
+</mapper>

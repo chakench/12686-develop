@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ #{copyright}#
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="hbi.core.task.mapper.ItemLinesMapper">
+    <!--查询任务行设置行-->
+    <select id="findLines" parameterType="int" resultType="hbi.core.task.dto.ItemLine">
+        select ITEM_LINE_ID itemLineId,ITEM_HEADER_ID itemHeaderId,TITLE_TEXT titleText,COLUMN_TYPE_CODE columnTypeCode,COLUMN_NAME columnName,SEQ_NUM seqNum,VALUE_TYPE valueType,
+        COLUMN_LEN columnLen,VALUE_SET valueSet,COLUMN_FORMAT columnFormat,REQUIRED_FLAG requiredFlag,
+        SHOW_FLAG showFlag,ENABLE_FLAG enabledFlag,UNIQUE_FLAG uniqueFlag,DISPLAY_WIDTH displayWidth,OBJECT_VERSION_NUMBER objectVersionNumber
+        from hss_task_item_line_b where ITEM_HEADER_ID=#{itemHeaderId}
+    </select>
+
+    <!--插入任务行设置行-->
+    <insert id="addLines" parameterType="hbi.core.task.dto.ItemLine" useGeneratedKeys="true" keyProperty="itemLineId">
+        insert into hss_task_item_line_b(ITEM_HEADER_ID,TITLE_TEXT,COLUMN_TYPE_CODE,COLUMN_NAME,SEQ_NUM,VALUE_TYPE,COLUMN_LEN,VALUE_SET,
+        COLUMN_FORMAT,REQUIRED_FLAG,SHOW_FLAG,ENABLE_FLAG,UNIQUE_FLAG,DISPLAY_WIDTH,CREATION_DATE,CREATED_BY,LAST_UPDATE_DATE)
+        values(#{itemHeaderId},#{titleText},#{columnTypeCode},#{columnName},#{seqNum},#{valueType},#{columnLen},#{valueSet},
+        #{columnFormat},#{requiredFlag},#{showFlag},#{enabledFlag},#{uniqueFlag},#{displayWidth},now(),#{createdBy},now())
+    </insert>
+    <!--删除设置行-->
+    <delete id="deleteLines" parameterType="hbi.core.task.dto.ItemLine">
+        delete from hss_task_item_line_b
+        <where>
+            <choose>
+                <when test="itemLineId!=null and itemLineId!=0">
+                    ITEM_LINE_ID =#{itemLineId}
+                </when>
+                <otherwise>
+                    ITEM_HEADER_ID=#{itemHeaderId}
+                </otherwise>
+            </choose>
+        </where>
+    </delete>
+
+    <!--更新-->
+    <update id="updateLines" parameterType="hbi.core.task.dto.ItemLine">
+        update hss_task_item_line_b set TITLE_TEXT=#{titleText},COLUMN_TYPE_CODE =#{columnTypeCode},COLUMN_NAME =#{columnName},
+        SEQ_NUM =#{seqNum},VALUE_TYPE =#{valueType},COLUMN_LEN=#{columnLen},VALUE_SET =#{valueSet},COLUMN_FORMAT =#{columnFormat},
+        REQUIRED_FLAG =#{requiredFlag},SHOW_FLAG=#{showFlag},ENABLE_FLAG =#{enabledFlag},UNIQUE_FLAG=#{uniqueFlag},DISPLAY_WIDTH=#{displayWidth},OBJECT_VERSION_NUMBER=OBJECT_VERSION_NUMBER+1,LAST_UPDATE_DATE=now()
+        where ITEM_LINE_ID=#{itemLineId} and OBJECT_VERSION_NUMBER=#{objectVersionNumber}
+    </update>
+</mapper>
